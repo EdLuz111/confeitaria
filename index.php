@@ -75,5 +75,32 @@
             }
         ?>
     </table>
+    <table width="100%" border="1">
+        <thead>
+            <tr>
+                <th>Tamanho</th>
+                <th>Data</th>
+                <th>Observações</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <?php
+            $sql = "SELECT * FROM pedidos";
+            // execução do comando select
+            $consulta_2 = $conexao->query($sql);
+            while ($linha = $consulta_2->fetch(PDO::FETCH_OBJ)) {
+        ?>
+            <tr>
+                <td><?php  echo $linha->tamanho ?></td>
+                <td><?php  echo $linha->data_para_entrega ?></td>
+                <td><?php  echo $linha->observacoes ?></td>
+                <td>
+                    <a href="excluir_pedido.php?id=<?php echo $linha->id ?>">Excluir</a>
+                </td>
+            </tr>
+        <?php
+            }
+        ?>
+    </table>
 </body>
 </html>

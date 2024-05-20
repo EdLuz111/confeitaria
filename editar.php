@@ -6,13 +6,14 @@
     $nome = $_REQUEST['nome'];
     $numero = $_REQUEST['numero'];
 
-    $sql = "UPDATE clientes SET nome = :nome, numero = :numero WHERE id = :id ";
+    $sql_cliente = "UPDATE clientes SET nome = :nome, numero = :numero WHERE id = :id ";
 
-    $stmt = $conexao->prepare($sql);
-    $stmt->bindParam(':nome', $nome);
-    $stmt->bindParam(':numero', $numero);
-    $stmt->bindParam(':id', $id);
-    $stmt->execute(); 
+    $stmt_cliente = $conexao->prepare($sql_cliente);
+    $stmt_cliente->bindParam(':nome', $nome);
+    $stmt_cliente->bindParam(':numero', $numero);
+    $stmt_cliente->bindParam(':id', $id);
+    $stmt_cliente->execute(); 
+
 
     header("Location: cliente.php?id=$id");
 ?>
