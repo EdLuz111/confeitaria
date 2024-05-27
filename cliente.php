@@ -25,8 +25,14 @@ $pedidos = $stmt_pedidos->fetchAll(PDO::FETCH_OBJ);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Cliente</title>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+    </script>
 </head>
 <body>
+    
     <form action="editar.php" method="post">
         <input type="hidden" name="id" value="<?php echo $cliente->id ?>">
         <span>Nome: </span><input type="text" name="nome" value="<?php echo $cliente->nome ?>">
@@ -37,8 +43,9 @@ $pedidos = $stmt_pedidos->fetchAll(PDO::FETCH_OBJ);
         <br><br>
         <input type="submit" value="Editar">
     </form>
+    <button onclick="goBack()">Voltar</button>
     <?php foreach ($pedidos as $pedido): ?>
-        <form action="editar_pedido.php" method="'post">
+        <form action="editar_pedido.php" method="post">
             <input type="hidden" name="id_cliente" value="<?php echo $cliente->id ?>">
             <input type="hidden" name="id_pedido" value="<?php echo $pedido->id ?>">
             <span>Tamanho: </span><input type="text" name="tamanho" value="<?php echo $pedido->tamanho ?>">
@@ -51,6 +58,6 @@ $pedidos = $stmt_pedidos->fetchAll(PDO::FETCH_OBJ);
             <input type="submit" value="Editar pedido">
         </form>
         <br>
-        <?php endforeach; ?>
+    <?php endforeach; ?>
 </body>
 </html>
