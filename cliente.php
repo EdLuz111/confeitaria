@@ -12,7 +12,7 @@ $stmt_cliente->execute();
 $cliente = $stmt_cliente->fetch(PDO::FETCH_OBJ);
 
 // Busca os pedidos do cliente
-$sql_pedidos = "SELECT id, tamanho, data_para_entrega, observacoes FROM pedidos WHERE id_cliente = :id_cliente";
+$sql_pedidos = "SELECT id, tamanho, data_para_entrega, observacoes, preco FROM pedidos WHERE id_cliente = :id_cliente";
 $stmt_pedidos = $conexao->prepare($sql_pedidos);
 $stmt_pedidos->bindParam(':id_cliente', $id, PDO::PARAM_INT);
 $stmt_pedidos->execute();
@@ -45,19 +45,22 @@ $pedidos = $stmt_pedidos->fetchAll(PDO::FETCH_OBJ);
     </form>
     <button onclick="goBack()">Voltar</button>
     <?php foreach ($pedidos as $pedido): ?>
-        <form action="editar_pedido.php" method="post">
-            <input type="hidden" name="id_cliente" value="<?php echo $cliente->id ?>">
-            <input type="hidden" name="id_pedido" value="<?php echo $pedido->id ?>">
-            <span>Tamanho: </span><input type="text" name="tamanho" value="<?php echo $pedido->tamanho ?>">
-            <br><br>
-            <span>Data para entrega:</span>
-            <input type="date" name="data_para_entrega" value="<?php echo $pedido->data_para_entrega ?>">
-            <br><br>
-            <span>Observações:</span>
-            <input type="text" name="observacoes" value="<?php echo $pedido->observacoes ?>">
-            <input type="submit" value="Editar pedido">
-        </form>
-        <br>
-    <?php endforeach; ?>
+    <form action="editar_pedido.php" method="post">
+        <input type="hidden" name="id_cliente" value="<?php echo $cliente->id ?>">
+        <input type="hidden" name="id_pedido" value="<?php echo $pedido->id ?>">
+        <span>Tamanho: </span><input type="text" name="tamanho" value="<?php echo $pedido->tamanho ?>">
+        <br><br>
+        <span>Data para entrega:</span>
+        <input type="date" name="data_para_entrega" value="<?php echo $pedido->data_para_entrega ?>">
+        <br><br>
+        <span>Observações:</span>
+        <input type="text" name="observacoes" value="<?php echo $pedido->observacoes ?>">
+        <br><br>
+        <span>Preço:</span>
+        <input type="number" step="0.01" name="preco" value="<?php echo $pedido->preco ?>">
+        <input type="submit" value="Editar pedido">
+    </form>
+    <br>
+<?php endforeach; ?>
 </body>
 </html>
