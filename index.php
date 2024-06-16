@@ -1,5 +1,6 @@
 <?php
 include './conexao.php';
+session_start(); // Inicie a sessão no início do arquivo
 
 // Funções para calcular métricas
 function calcularGanhoMensal($conexao) {
@@ -51,11 +52,18 @@ $ganhosMensais = obterGanhosMensais($conexao);
 
 $section = isset($_GET['section']) ? $_GET['section'] : 'dashboard';
 
+if (isset($_SESSION['flash_message'])) {
+    $flash_message = $_SESSION['flash_message'];
+    $flash_type = $_SESSION['flash_type'];
+
+    // Remova a mensagem flash da sessão após exibi-la
+    unset($_SESSION['flash_message']);
+    unset($_SESSION['flash_type']);
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel de Controle</title>
@@ -75,6 +83,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : 'dashboard';
     </style>
 </head>
 <body>
+
 <div class="d-flex">
     <aside class="sidebar">
         <nav class="nav flex-column">
@@ -91,14 +100,17 @@ $section = isset($_GET['section']) ? $_GET['section'] : 'dashboard';
             <a class="nav-link" href="index.php?section=pedidos">
                 <i class="bi bi-check2-square"></i>Pedidos
             </a>
-            <a class="nav-link" href="index.php?section=cadastro">
-                <i class="bi bi-clipboard2-plus-fill"></i>Cadastro
-            </a>
         </nav>
     </aside>
 
     <main class="flex-grow-1">
         <div class="content">
+            <?php if (isset($flash_message)): ?>
+                <div class="flash-message <?= $flash_type ?>">
+                    <?= $flash_message ?>
+                </div>
+            <?php endif; ?>
+
             <?php
             if ($section == 'dashboard') {
                 $ganho_mensal = calcularGanhoMensal($conexao);
@@ -174,16 +186,6 @@ $section = isset($_GET['section']) ? $_GET['section'] : 'dashboard';
                                 events: {
                                     url: 'eventos.php',
                                     method: 'POST',
-                                    <?php
-                                    $sql = "SELECT pedidos.*, clientes.nome as nome_cliente FROM pedidos JOIN clientes ON pedidos.id_cliente = clientes.id";
-                                    $consulta_2 = $conexao->query($sql);
-                                    while ($linha = $consulta_2->fetch(PDO::FETCH_OBJ)) {
-                                        echo "{
-                                            title: '{$linha->nome_cliente}',
-                                            start: '{$linha->data_para_entrega}'
-                                        },";
-                                    }
-                                    ?>
                                     extraParams: {
                                         custom_param: 'calendario'
                                     }
@@ -197,6 +199,16 @@ $section = isset($_GET['section']) ? $_GET['section'] : 'dashboard';
             } elseif ($section == 'clientes') {
                 ?>
                 <section id="clientes">
+                <h2>Cadastro</h2>
+                    <h3>Cadastrar Cliente</h3>
+                    <form action="cadastrar.php" method="post">
+                        <label>Nome: </label><input type="text" name="nome" required>
+                        <br><br>
+                        <label>Número: </label>
+                        <input type="tel" pattern="\(\d{2}\) \d{5}-\d{4}" name="numero" placeholder="(XX) XXXXX-XXXX" required>
+                        <br><br>
+                        <input type="submit" value="Cadastrar Cliente">
+                    </form>
                     <h2>Clientes</h2>
                     <table>
                         <thead>
@@ -268,48 +280,6 @@ $section = isset($_GET['section']) ? $_GET['section'] : 'dashboard';
                     </table>
                 </section>
                 <?php
-            } elseif ($section == 'cadastro') {
-                ?>
-                <section id="cadastro">
-                    <h2>Cadastro</h2>
-                    <h3>Cadastrar Cliente</h3>
-                    <form action="cadastrar.php" method="post">
-                        <label>Nome: </label><input type="text" name="nome" required>
-                        <br><br>
-                        <label>Número: </label>
-                        <input type="tel" pattern="\(\d{2}\) \d{5}-\d{4}" name="numero" placeholder="(XX) XXXXX-XXXX" required>
-                        <br><br>
-                        <input type="submit" value="Cadastrar Cliente">
-                    </form>
-
-                    <h3>Cadastrar Pedido</h3>
-                    <form action="cadastrar_pedido.php" method="post">
-                        <label>Tamanho: </label><input type="text" name="tamanho" required>
-                        <br><br>
-                        <label>Data para entrega:</label>
-                        <input type="date" name="data_para_entrega" required>
-                        <br><br>
-                        <label>Observações:</label>
-                        <input type="text" name="observacoes">
-                        <br><br>
-                        <label>Preço:</label>
-                        <input type="text" name="preco" required>
-                        <br><br>
-                        <select name="id_cliente" required>
-                            <?php
-                            $sql = "SELECT * FROM clientes";
-                            $consulta = $conexao->query($sql);
-                            while ($linha = $consulta->fetch(PDO::FETCH_OBJ)) {
-                                ?>
-                                <option value="<?php echo $linha->id ?>"><?php echo $linha->nome ?></option>
-                                <?php
-                            }
-                            ?>
-                        </select>
-                        <input type="submit" value="Cadastrar Pedido">
-                    </form>
-                </section>
-                <?php
             }
             ?>
         </div>
@@ -320,4 +290,3 @@ $section = isset($_GET['section']) ? $_GET['section'] : 'dashboard';
 
 </body>
 </html>
-

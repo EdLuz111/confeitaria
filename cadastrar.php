@@ -1,4 +1,6 @@
 <?php 
+session_start(); // Inicie a sessão
+
 include './conexao.php';
 
 if (isset($_POST['nome']) && isset($_POST['numero'])) {
@@ -6,7 +8,9 @@ if (isset($_POST['nome']) && isset($_POST['numero'])) {
     $numero = $_POST['numero'];
 
     if (empty($nome) || empty($numero)) {
-        echo "<script>alert('Por favor, preencha todos os campos.'); window.location.href='index.php?section=clientes';</script>";
+        $_SESSION['flash_message'] = 'Por favor, preencha todos os campos.';
+        $_SESSION['flash_type'] = 'error';
+        header('Location: index.php?section=clientes');
         exit();
     }
 
@@ -17,12 +21,20 @@ if (isset($_POST['nome']) && isset($_POST['numero'])) {
         $stmt->bindParam(':numero', $numero);
         $stmt->execute();
 
-        echo "<script>alert('Cliente cadastrado com sucesso!'); window.location.href='index.php?section=clientes';</script>";
+        $_SESSION['flash_message'] = 'Cliente cadastrado com sucesso!';
+        $_SESSION['flash_type'] = 'success';
+        header('Location: index.php?section=clientes');
         exit();
     } catch (PDOException $e) {
-        echo 'Erro: ' . $e->getMessage();
+        $_SESSION['flash_message'] = 'Erro: ' . $e->getMessage();
+        $_SESSION['flash_type'] = 'error';
+        header('Location: index.php?section=clientes');
+        exit();
     }
 } else {
-    echo "<script>alert('Por favor, preencha todos os campos.'); window.location.href='index.php?section=clientes';</script>";
+    $_SESSION['flash_message'] = 'Por favor, preencha todos os campos.';
+    $_SESSION['flash_type'] = 'error';
+    header('Location: index.php?section=clientes');
+    exit();
 }
 ?>

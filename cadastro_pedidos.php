@@ -1,4 +1,6 @@
 <?php
+session_start(); // Inicie a sessão
+
 include './conexao.php';
 
 // Verifica se todos os campos obrigatórios foram recebidos via POST
@@ -15,7 +17,9 @@ if (
     $preco = $_POST['preco'];
 
     if (empty($tamanho) || empty($data_para_entrega) || empty($id_cliente) || empty($preco)) {
-        echo "<script>alert('Por favor, preencha todos os campos obrigatórios.'); window.location.href='index.php?section=pedidos';</script>";
+        $_SESSION['flash_message'] = 'Por favor, preencha todos os campos obrigatórios.';
+        $_SESSION['flash_type'] = 'error';
+        header("Location: cliente.php?id=$id_cliente");
         exit();
     }
 
@@ -29,12 +33,20 @@ if (
         $stmt->bindParam(':preco', $preco);
         $stmt->execute();
 
-        echo "<script>alert('Pedido cadastrado com sucesso!'); window.location.href='index.php?section=pedidos';</script>";
+        $_SESSION['flash_message'] = 'Pedido cadastrado com sucesso!';
+        $_SESSION['flash_type'] = 'success';
+        header("Location: cliente.php?id=$id_cliente");
         exit();
     } catch (PDOException $e) {
-        echo 'Erro: ' . $e->getMessage();
+        $_SESSION['flash_message'] = 'Erro: ' . $e->getMessage();
+        $_SESSION['flash_type'] = 'error';
+        header("Location: cliente.php?id=$id_cliente");
+        exit();
     }
 } else {
-    echo "<script>alert('Por favor, preencha todos os campos obrigatórios.'); window.location.href='index.php?section=pedidos';</script>";
+    $_SESSION['flash_message'] = 'Por favor, preencha todos os campos obrigatórios.';
+    $_SESSION['flash_type'] = 'error';
+    header("Location: cliente.php?id=$id_cliente");
+    exit();
 }
 ?>
