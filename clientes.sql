@@ -4,7 +4,7 @@ SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
 -- Criação do Schema `confeitaria`
-CREATE SCHEMA IF NOT EXISTS `confeitaria` DEFAULT CHARACTER SET utf8mb4 ;
+CREATE SCHEMA IF NOT EXISTS `confeitaria` DEFAULT CHARACTER SET utf8mb4;
 USE `confeitaria`;
 
 -- Tabela `clientes`
@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS `pedidos` (
     `tamanho` VARCHAR(45) NOT NULL,
     `data_para_entrega` DATE NOT NULL,
     `observacoes` VARCHAR(100) NOT NULL,
-    `preco` DECIMAL(10,2) NOT NULL,  -- Nova coluna de preço
+    `preco` DECIMAL(10,2) NOT NULL,
+    `status` VARCHAR(20) NOT NULL DEFAULT 'pendente', -- Adicionando a coluna `status`
     PRIMARY KEY (`id`),
     INDEX `id_cliente` (`id_cliente` ASC),
     CONSTRAINT `fk_id_cliente`
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS `pedidos` (
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 8
   DEFAULT CHARACTER SET = utf8mb4;
+
 
 -- Revertendo configurações do MySQL
 SET SQL_MODE=@OLD_SQL_MODE;
