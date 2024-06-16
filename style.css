@@ -1,40 +1,162 @@
-body {
-    font-family: Arial, sans-serif;
+/* Reset básico para garantir consistência */
+* {
     margin: 0;
     padding: 0;
-    display: flex;
+    box-sizing: border-box;
 }
 
+/* Estilo para o corpo da página */
+body {
+    font-family: "Oswald", sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fc;
+    color: #333;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: row;
+}
+
+/* Estilo para a barra lateral */
 .sidebar {
-    width: 200px;
-    background-color: #333;
-    color: white;
-    padding: 20px;
-    height: 100vh;
     position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    width: 250px; /* Largura da barra lateral */
+    background-color: #02284e; /* Cor de fundo da barra lateral */
+    border-right: 1px solid #dee2e6; /* Borda direita */
+    padding-top: 3.5rem; /* Espaçamento do topo */
+    color: #ffffff; /* Cor do texto da barra lateral */
+    overflow-y: auto; /* Barra de rolagem vertical */
 }
 
 .sidebar h2 {
-    color: white;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.5rem; /* Tamanho do título */
 }
 
 .sidebar a {
-    color: white;
+    display: block;
+    padding: 10px;
+    color: #ffffff; /* Cor do texto dos links */
     text-decoration: none;
-    display: block;
-    margin: 10px 0;
+    margin-bottom: 5px;
+    transition: color 0.3s; /* Transição suave para cor do texto */
 }
 
+.sidebar a:hover {
+    color: #007bff; /* Cor do texto ao passar o mouse */
+}
+
+/* Estilo para o conteúdo principal */
 .content {
-    margin-left: 220px;
+    flex: 1;
     padding: 20px;
-    width: calc(100% - 220px);
+    margin-left: 250px; /* Espaçamento à esquerda para acomodar a barra lateral */
 }
 
-.section {
-    display: none;
+.content h2 {
+    margin-top: 0;
+    font-size: 1.8rem; /* Tamanho do título */
+    margin-bottom: 20px;
 }
 
-.section.active {
+.card {
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    padding: 20px;
+}
+
+#calendar {
+    max-width: 900px;
+    margin: 20px auto; /* Centraliza o calendário */
+}
+
+form label {
     display: block;
+    margin-bottom: 5px;
+    font-weight: bold; /* Texto em negrito para labels */
+}
+
+form input, form select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    box-sizing: border-box; /* Garante que o padding não aumente o tamanho total */
+    border: 1px solid #ccc; /* Borda leve nos inputs */
+    border-radius: 4px; /* Borda arredondada */
+}
+
+form input[type="submit"] {
+    width: auto;
+    background-color: #4e73df;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 4px; /* Borda arredondada */
+}
+
+form input[type="submit"]:hover {
+    background-color: #2e59d9;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+table th, table td {
+    padding: 12px; /* Mais espaçamento dentro das células */
+    border: 1px solid #ddd;
+}
+
+table th {
+    background-color: #f8f9fc;
+    font-weight: bold; /* Texto em negrito nas cabeçalhos */
+    text-align: left; /* Alinha o texto à esquerda */
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .wrapper {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        position: static;
+        width: 100%;
+        order: 2;
+        border-right: none;
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
+
+    .content {
+        order: 1;
+        margin-left: 0;
+        padding: 20px;
+    }
+
+    #calendar {
+        max-width: none;
+    }
+}
+
+.nav-link i {
+    display: inline-block; /* Garante que o ícone e o texto fiquem na mesma linha */
+    vertical-align: middle; /* Alinha verticalmente o ícone */
+    margin-right: 5px; /* Espaçamento direito entre o ícone e o texto */
+}
+
+.nav-link.disabled {
+    color: #ffffff;
 }

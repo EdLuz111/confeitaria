@@ -1,20 +1,28 @@
 <?php 
 include './conexao.php';
 
-$nome = $_REQUEST['nome'];
-$numero = $_REQUEST['numero'];
+if (isset($_POST['nome']) && isset($_POST['numero'])) {
+    $nome = $_POST['nome'];
+    $numero = $_POST['numero'];
 
-try {
-    $sql = 'INSERT INTO clientes (nome, numero) VALUES (:nome, :numero)';
-    $stmt = $conexao->prepare($sql);
-    $stmt->bindParam(':nome', $nome);
-    $stmt->bindParam(':numero', $numero);
-    $stmt->execute();
+    if (empty($nome) || empty($numero)) {
+        echo "<script>alert('Por favor, preencha todos os campos.'); window.location.href='index.php?section=clientes';</script>";
+        exit();
+    }
 
-    echo "Cliente cadastrado com sucesso!";
-    header('Location: index.php');
-    exit();
-} catch (PDOException $e) {
-    echo 'Erro: ' . $e->getMessage();
+    try {
+        $sql = 'INSERT INTO clientes (nome, numero) VALUES (:nome, :numero)';
+        $stmt = $conexao->prepare($sql);
+        $stmt->bindParam(':nome', $nome);
+        $stmt->bindParam(':numero', $numero);
+        $stmt->execute();
+
+        echo "<script>alert('Cliente cadastrado com sucesso!'); window.location.href='index.php?section=clientes';</script>";
+        exit();
+    } catch (PDOException $e) {
+        echo 'Erro: ' . $e->getMessage();
+    }
+} else {
+    echo "<script>alert('Por favor, preencha todos os campos.'); window.location.href='index.php?section=clientes';</script>";
 }
 ?>

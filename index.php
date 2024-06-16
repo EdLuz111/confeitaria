@@ -1,184 +1,323 @@
 <?php
 include './conexao.php';
 
-// Calcular o ganho mensal
-$mes_atual = date('Y-m');
-$sql_ganho_mensal = "SELECT SUM(preco) AS ganho_mensal FROM pedidos WHERE data_para_entrega LIKE '$mes_atual%'";
-$stmt_ganho_mensal = $conexao->prepare($sql_ganho_mensal);
-$stmt_ganho_mensal->execute();
-$ganho_mensal = $stmt_ganho_mensal->fetch(PDO::FETCH_ASSOC);
+// Funções para calcular métricas
+function calcularGanhoMensal($conexao) {
+    $mes_atual = date('Y-m');
+    $sql = "SELECT SUM(preco) AS ganho_mensal FROM pedidos WHERE data_para_entrega LIKE '$mes_atual%'";
+    $stmt = $conexao->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetch(PDO::FETCH_ASSOC)['ganho_mensal'];
+}
 
-// Calcular os ganhos futuros
-$data_atual = date('Y-m-d');
-$sql_ganhos_futuros = "SELECT SUM(preco) AS ganhos_futuros FROM pedidos WHERE data_para_entrega > '$data_atual'";
-$stmt_ganhos_futuros = $conexao->prepare($sql_ganhos_futuros);
-$stmt_ganhos_futuros->execute();
-$ganhos_futuros = $stmt_ganhos_futuros->fetch(PDO::FETCH_ASSOC);
+function calcularGanhosFuturos($conexao) {
+    $data_atual = date('Y-m-d');
+    $sql = "SELECT SUM(preco) AS ganhos_futuros FROM pedidos WHERE data_para_entrega > '$data_atual'";
+    $stmt = $conexao->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetch(PDO::FETCH_ASSOC)['ganhos_futuros'];
+}
+
+function contarPedidosPendentes($conexao) {
+    $data_atual = date('Y-m-d');
+    $sql = "SELECT COUNT(*) AS pedidos_pendentes FROM pedidos WHERE data_para_entrega > '$data_atual' AND status != 'entregue'";
+    $stmt = $conexao->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetch(PDO::FETCH_ASSOC)['pedidos_pendentes'];
+}
+
+function obterGanhosMensais($conexao) {
+    $ganhosMensais = [];
+    for ($i = 1; $i <= 12; $i++) {
+        $mes = str_pad($i, 2, '0', STR_PAD_LEFT);
+        $ano = date('Y');
+        $sql = "SELECT SUM(preco) AS ganho_mensal FROM pedidos WHERE DATE_FORMAT(data_para_entrega, '%Y-%m') = '$ano-$mes'";
+        $stmt = $conexao->prepare($sql);
+        $stmt->execute();
+        $ganho_mensal = $stmt->fetch(PDO::FETCH_ASSOC)['ganho_mensal'] ?? 0;
+        $ganhosMensais[] = $ganho_mensal;
+    }
+    return $ganhosMensais;
+}
+
+function calcularGanhosTotais($conexao) {
+    $sql = "SELECT SUM(preco) AS ganhos_totais FROM pedidos";
+    $stmt = $conexao->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetch(PDO::FETCH_ASSOC)['ganhos_totais'];
+}
+
+$ganhosMensais = obterGanhosMensais($conexao);
+
+$section = isset($_GET['section']) ? $_GET['section'] : 'dashboard';
+
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teste</title>
+    <title>Painel de Controle</title>
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css" rel="stylesheet">
+
     <style>
-        <?php include './style.css'?>
+        <?php include './style.css' ?>
     </style>
 </head>
 <body>
+<div class="d-flex">
+    <aside class="sidebar">
+        <nav class="nav flex-column">
+            <h2 class="nav-link disabled">Confeitaria</h2>
+            <a class="nav-link" href="index.php?section=dashboard">
+                <i class="bi bi-speedometer2"></i>Painel
+            </a>
+            <a class="nav-link" href="index.php?section=calendario">
+                <i class="bi bi-calendar"></i>Calendário
+            </a>
+            <a class="nav-link" href="index.php?section=clientes">
+                <i class="bi bi-file-earmark-person-fill"></i>Clientes
+            </a>
+            <a class="nav-link" href="index.php?section=pedidos">
+                <i class="bi bi-check2-square"></i>Pedidos
+            </a>
+            <a class="nav-link" href="index.php?section=cadastro">
+                <i class="bi bi-clipboard2-plus-fill"></i>Cadastro
+            </a>
+        </nav>
+    </aside>
 
-<div class="sidebar">
-    <h2>Teste</h2>
-    <a href="#painel">Painel</a>
-    <a href="#calendario">Calendário</a>
-    <a href="#clientes">Clientes</a>
-    <a href="#pedidos">Pedidos</a>
+    <main class="flex-grow-1">
+        <div class="content">
+            <?php
+            if ($section == 'dashboard') {
+                $ganho_mensal = calcularGanhoMensal($conexao);
+                $ganhos_futuros = calcularGanhosFuturos($conexao);
+                $pedidos_pendentes = contarPedidosPendentes($conexao);
+                $ganhos_totais = calcularGanhosTotais($conexao);
+                ?>
+                <section id="dashboard">
+                    <h2>Dashboard</h2>
+                    <div class="card">
+                        <h3>Ganhos Mensais</h3>
+                        <p>R$ <?php echo $ganho_mensal; ?></p>
+                    </div>
+                    <div class="card">
+                        <h3>Ganhos Futuros</h3>
+                        <p>R$ <?php echo $ganhos_futuros; ?></p>
+                    </div>
+                    <div class="card">
+                        <h3>Pedidos Pendentes</h3>
+                        <p><?php echo $pedidos_pendentes; ?></p>
+                    </div>
+                    <div class="card">
+                        <h3>Ganhos Totais</h3>
+                        <p>R$ <?php echo $ganhos_totais; ?></p>
+                    </div>
+                    <div class="card">
+                        <h3>Visão Geral dos Ganhos</h3>
+                        <canvas id="earningsChart"></canvas>
+                    </div>
+                </section>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var ctx = document.getElementById('earningsChart').getContext('2d');
+                        var earningsChart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                                datasets: [{
+                                    label: 'Ganhos',
+                                    data: <?php echo json_encode($ganhosMensais); ?>,
+                                    borderColor: 'rgba(75, 192, 192, 1)',
+                                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                    fill: true,
+                                    tension: 0.1
+                                }]
+                            },
+                            options: {
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: {
+                                            callback: function(value) {
+                                                return 'R$ ' + value;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    });
+                </script>
+                <?php
+            } elseif ($section == 'calendario') {
+                ?>
+                <section id="calendario">
+                    <h2>Calendário</h2>
+                    <div id='calendar'></div>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            var calendarEl = document.getElementById('calendar');
+                            var calendar = new FullCalendar.Calendar(calendarEl, {
+                                initialView: 'dayGridMonth',
+                                events: {
+                                    url: 'eventos.php',
+                                    method: 'POST',
+                                    <?php
+                                    $sql = "SELECT pedidos.*, clientes.nome as nome_cliente FROM pedidos JOIN clientes ON pedidos.id_cliente = clientes.id";
+                                    $consulta_2 = $conexao->query($sql);
+                                    while ($linha = $consulta_2->fetch(PDO::FETCH_OBJ)) {
+                                        echo "{
+                                            title: '{$linha->nome_cliente}',
+                                            start: '{$linha->data_para_entrega}'
+                                        },";
+                                    }
+                                    ?>
+                                    extraParams: {
+                                        custom_param: 'calendario'
+                                    }
+                                }
+                            });
+                            calendar.render();
+                        });
+                    </script>
+                </section>
+                <?php
+            } elseif ($section == 'clientes') {
+                ?>
+                <section id="clientes">
+                    <h2>Clientes</h2>
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Número</th>
+                            <th>Ações</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php
+                        $sql = "SELECT * FROM clientes";
+                        $consulta_2 = $conexao->query($sql);
+                        while ($linha = $consulta_2->fetch(PDO::FETCH_OBJ)) {
+                            ?>
+                            <tr>
+                                <td><?php echo $linha->nome ?></td>
+                                <td><?php echo $linha->numero ?></td>
+                                <td>
+                                    <a href="cliente.php?id=<?php echo $linha->id ?>">Editar</a>
+                                    <a href="excluir.php?id=<?php echo $linha->id ?>">Excluir</a>
+                                </td>
+                            </tr>
+                            <?php
+                        }
+                        ?>
+                        </tbody>
+                    </table>
+                </section>
+                <?php
+            } elseif ($section == 'pedidos') {
+                ?>
+                <section id="pedidos">
+                    <h2>Pedidos</h2>
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Tamanho</th>
+                            <th>Data</th>
+                            <th>Preço</th>
+                            <th>Observações</th>
+                            <th>Cliente</th>
+                            <th>Ações</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php
+                        $sql = "SELECT pedidos.*, clientes.nome as nome_cliente 
+                                FROM pedidos 
+                                JOIN clientes ON pedidos.id_cliente = clientes.id";
+                        $stmt = $conexao->query($sql);
+                        while ($linha = $stmt->fetch(PDO::FETCH_OBJ)) {
+                            ?>
+                            <tr>
+                                <td><?php echo $linha->tamanho ?></td>
+                                <td><?php echo $linha->data_para_entrega ?></td>
+                                <td><?php echo $linha->preco ?></td>
+                                <td><?php echo $linha->observacoes ?></td>
+                                <td><?php echo $linha->nome_cliente ?></td>
+                                <td>
+                                    <a href="excluir_pedido.php?id=<?php echo $linha->id ?>">Excluir</a>
+                                    <a href="marcar_entregue.php?id=<?php echo $linha->id ?>">Entregue</a>
+                                </td>
+                            </tr>
+                            <?php
+                        }
+                        ?>
+                        </tbody>
+                    </table>
+                </section>
+                <?php
+            } elseif ($section == 'cadastro') {
+                ?>
+                <section id="cadastro">
+                    <h2>Cadastro</h2>
+                    <h3>Cadastrar Cliente</h3>
+                    <form action="cadastrar.php" method="post">
+                        <label>Nome: </label><input type="text" name="nome" required>
+                        <br><br>
+                        <label>Número: </label>
+                        <input type="tel" pattern="\(\d{2}\) \d{5}-\d{4}" name="numero" placeholder="(XX) XXXXX-XXXX" required>
+                        <br><br>
+                        <input type="submit" value="Cadastrar Cliente">
+                    </form>
+
+                    <h3>Cadastrar Pedido</h3>
+                    <form action="cadastrar_pedido.php" method="post">
+                        <label>Tamanho: </label><input type="text" name="tamanho" required>
+                        <br><br>
+                        <label>Data para entrega:</label>
+                        <input type="date" name="data_para_entrega" required>
+                        <br><br>
+                        <label>Observações:</label>
+                        <input type="text" name="observacoes">
+                        <br><br>
+                        <label>Preço:</label>
+                        <input type="text" name="preco" required>
+                        <br><br>
+                        <select name="id_cliente" required>
+                            <?php
+                            $sql = "SELECT * FROM clientes";
+                            $consulta = $conexao->query($sql);
+                            while ($linha = $consulta->fetch(PDO::FETCH_OBJ)) {
+                                ?>
+                                <option value="<?php echo $linha->id ?>"><?php echo $linha->nome ?></option>
+                                <?php
+                            }
+                            ?>
+                        </select>
+                        <input type="submit" value="Cadastrar Pedido">
+                    </form>
+                </section>
+                <?php
+            }
+            ?>
+        </div>
+    </main>
 </div>
 
-<div class="content">
-    <section id="painel">
-        <h2>Painel</h2>
-        <p>Bem-vindo ao Painel Administrativo!</p>
-        <!-- Exibir ganho mensal e ganhos futuros -->
-        <div>
-            <h3>Ganhos Mensais</h3>
-            <p>O ganho total deste mês é: R$ <?php echo $ganho_mensal['ganho_mensal']; ?></p>
-        </div>
-        <div>
-            <h3>Ganhos Futuros</h3>
-            <p>O total de ganhos futuros é: R$ <?php echo $ganhos_futuros['ganhos_futuros']; ?></p>
-        </div>
-    </section>
-
-    <section id="calendario">
-        <h2>Calendário</h2>
-        <div id='calendar'></div>
-    </section>
-
-    <section id="clientes">
-        <h2>Clientes</h2>
-        <form action="cadastrar.php" method="post">
-            <span>Nome: </span><input type="text" name="nome">
-            <br><br>
-            <span>Número: </span>
-            <input type="tel" pattern="\(\d{2}\) \d{5}-\d{4}" name="numero" placeholder="(XX) XXXXX-XXXX">
-            <br><br>
-            <input type="submit" value="Cadastrar">
-        </form>
-        <table width="100%" border="1">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Número</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                $sql = "SELECT * FROM clientes";
-                $consulta_2 = $conexao->query($sql);
-                while ($linha = $consulta_2->fetch(PDO::FETCH_OBJ)) {
-                ?>
-                <tr>
-                    <td><?php echo $linha->nome ?></td>
-                    <td><?php echo $linha->numero ?></td>
-                    <td>
-                        <a href="cliente.php?id=<?php echo $linha->id ?>">Editar</a>
-                        <a href="excluir.php?id=<?php echo $linha->id ?>">Excluir</a>
-                    </td>
-                </tr>
-                <?php
-                }
-                ?>
-            </tbody>
-        </table>
-    </section>
-
-    <section id="pedidos">
-        <h2>Pedidos</h2>
-        <form action="cadastro_pedidos.php" method="post">
-            <span>Tamanho: </span>
-            <input type="text" name="tamanho">
-            <br><br>
-            <span>Data para entrega:</span>
-            <input type="date" name="data_para_entrega">
-            <br><br>
-            <span>Observações:</span>
-            <input type="text" name="observacoes">
-            <br><br>
-            <span>Preço:</span>
-            <input type="text" name="preco">
-            <br><br>
-            <select name="id_cliente" id="nome_cliente">
-                <?php
-                $sql = "SELECT * FROM clientes";
-                $consulta = $conexao->query($sql);
-                while ($linhas = $consulta->fetch(PDO::FETCH_OBJ)) {
-                ?>
-                <option value="<?php echo $linhas->id ?>"><?php echo $linhas->nome ?></option>
-                <?php
-                }
-                ?>
-            </select>
-            <input type="submit" value="Cadastrar">
-        </form>
-        <table width="100%" border="1">
-            <thead>
-                <tr>
-                    <th>Tamanho</th>
-                    <th>Data</th>
-                    <th>Preço</th>
-                    <th>Observações</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                $sql = "SELECT pedidos.*, clientes.nome as nome_cliente FROM pedidos JOIN clientes ON pedidos.id_cliente = clientes.id";
-                $consulta_2 = $conexao->query($sql);
-                while ($linha = $consulta_2->fetch(PDO::FETCH_OBJ)) {
-                ?>
-                <tr>
-                    <td><?php echo $linha->tamanho ?></td>
-                    <td><?php echo $linha->data_para_entrega ?></td>
-                    <td><?php echo $linha->preco ?></td>
-                    <td><?php echo $linha->observacoes ?></td>
-                    <td>
-                        <a href="excluir_pedido.php?id=<?php echo $linha->id ?>">Excluir</a>
-                    </td>
-                </tr>
-                <?php
-                }
-                ?>
-            </tbody>
-        </table>
-    </section>
-</div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var calendarEl = document.getElementById('calendar');
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            events: [
-                <?php
-                $sql = "SELECT pedidos.*, clientes.nome as nome_cliente FROM pedidos JOIN clientes ON pedidos.id_cliente = clientes.id";
-                $consulta_2 = $conexao->query($sql);
-                while ($linha = $consulta_2->fetch(PDO::FETCH_OBJ)) {
-                    echo "{
-                        title: '{$linha->nome_cliente}',
-                        start: '{$linha->data_para_entrega}'
-                    },";
-                }
-                ?>
-            ]
-        });
-        calendar.render();
-    });
-</script>
+<?php include './footer.php'?>
 
 </body>
 </html>
+
