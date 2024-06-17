@@ -3,14 +3,12 @@ include './conexao.php';
 
 session_start(); // Inicie a sessão no início do arquivo
 
-function calcularGanhoMensal($conexao, $id_cliente) {
-    $mes_atual = date('Y-m');
-    $sql = "SELECT SUM(preco) AS ganho_mensal FROM pedidos WHERE id_cliente = :id_cliente AND data_para_entrega LIKE :mes_atual";
+function calcularGanhoTotal($conexao, $id_cliente) {
+    $sql = "SELECT SUM(preco) AS ganho_total FROM pedidos WHERE id_cliente = :id_cliente";
     $stmt = $conexao->prepare($sql);
     $stmt->bindValue(':id_cliente', $id_cliente, PDO::PARAM_INT);
-    $stmt->bindValue(':mes_atual', $mes_atual . '%', PDO::PARAM_STR);
     $stmt->execute();
-    return $stmt->fetch(PDO::FETCH_ASSOC)['ganho_mensal'];
+    return $stmt->fetch(PDO::FETCH_ASSOC)['ganho_total'];
 }
 
 function calcularGanhosFuturos($conexao, $id_cliente) {
@@ -37,7 +35,7 @@ function contarPedidosPendentes($conexao, $id_cliente) {
 $id_cliente = $_REQUEST['id'];
 
 // Calcula os ganhos e pedidos pendentes do cliente específico
-$ganho_mensal = calcularGanhoMensal($conexao, $id_cliente);
+$ganho_total = calcularGanhoTotal($conexao, $id_cliente);
 $ganhos_futuros = calcularGanhosFuturos($conexao, $id_cliente);
 $pedidos_pendentes = contarPedidosPendentes($conexao, $id_cliente);
 
@@ -159,7 +157,7 @@ if (isset($_SESSION['flash_message'])) {
                         <h2>Ganhos do Cliente</h2>
                         <div class="card">
                             <div class="card-body">
-                                <p><strong>Ganho Mensal: </strong>R$ <?php echo number_format($ganho_mensal, 2, ',', '.'); ?></p>
+                                <p><strong>Ganho Total: </strong>R$ <?php echo number_format($ganho_total, 2, ',', '.'); ?></p>
                                 <p><strong>Ganhos Futuros: </strong>R$ <?php echo number_format($ganhos_futuros, 2, ',', '.'); ?></p>
                                 <p><strong>Pedidos Pendentes: </strong><?php echo $pedidos_pendentes; ?></p>
                             </div>
